@@ -141,11 +141,11 @@ def format_timestamp(seconds):
     :param seconds: Timestamp in seconds.
     :return: Formatted timestamp as a string.
     """
-    milliseconds = int((seconds % 1) * 1000)
-    seconds = int(seconds)
-    minutes, seconds = divmod(seconds, 60)
-    hours, minutes = divmod(minutes, 60)
-    return f"{hours:02}:{minutes:02}:{seconds:02},{milliseconds:03}"
+    total_milliseconds = int(round(seconds * 1000))
+    hours, remainder = divmod(total_milliseconds, 3600 * 1000)
+    minutes, remainder = divmod(remainder, 60 * 1000)
+    secs, milliseconds = divmod(remainder, 1000)
+    return f"{hours:02}:{minutes:02}:{secs:02},{milliseconds:03}"
 
 
 def log_error(error_message):
