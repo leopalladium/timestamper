@@ -3,6 +3,7 @@ import re
 import sys
 from datetime import datetime
 from docx import Document  # Requires `python-docx` package
+from faster_whisper import WhisperModel  # Requires `faster-whisper` package
 
 
 def add_template_to_sentences(input_file, output_file, template):
@@ -68,6 +69,59 @@ def process_docx(input_file, template):
     print(f"Processed .docx file: {docx_file}")
 
 
+def generate_srt_from_audio(audio_file, language):
+    """
+    Generate .txt and .srt files from an audio file using the faster-whisper library.
+
+    :param audio_file: Path to the audio file.
+    :param language: Language code for transcription (e.g., "en", "ru").
+    """
+    # Load the Whisper model with CUDA for GPU acceleration
+    print("Loading Whisper model...")
+    model = WhisperModel("base", device="cuda")  # Use "cuda" for GPU
+
+    # Transcribe the audio file
+    print(f"Transcribing {audio_file}...")
+    segments, _ = model.transcribe(audio_file, language=language)
+
+    # Generate the .txt file
+    txt_file = f"{os.path.splitext(audio_file)[0]}.txt"
+    with open(txt_file, 'w', encoding='utf-8') as file:
+        for segment in segments:
+            text = segment.text.strip()
+            file.write(f"{text}\n")
+    print(f"Text file created: {txt_file}")
+
+    # Generate the .srt file
+    srt_file = f"{os.path.splitext(audio_file)[0]}.srt"
+    with open(srt_file, 'w', encoding='utf-8') as file:
+        for idx, segment in enumerate(segments, start=1):
+            start_time = format_timestamp(segment.start)
+            end_time = format_timestamp(segment.end)
+            text = segment.text.strip()
+
+            file.write(f"{idx}\n")
+            file.write(f"{start_time} --> {end_time}\n")
+            file.write(f"{text}\n\n")
+    print(f"SRT file created: {srt_file}")
+
+    return txt_file
+
+
+def format_timestamp(seconds):
+    """
+    Format a timestamp in seconds to SRT format (HH:MM:SS,MS).
+
+    :param seconds: Timestamp in seconds.
+    :return: Formatted timestamp as a string.
+    """
+    milliseconds = int((seconds % 1) * 1000)
+    seconds = int(seconds)
+    minutes, seconds = divmod(seconds, 60)
+    hours, minutes = divmod(minutes, 60)
+    return f"{hours:02}:{minutes:02}:{seconds:02},{milliseconds:03}"
+
+
 def main():
     # Display author information
     print("Author: Klimentsi Katsko (@leopalladium)")
@@ -83,56 +137,79 @@ def main():
     # Explicitly set the working directory to the script's directory
     os.chdir(current_dir)
 
-    # List all .txt files in the current directory
+    # List all .txt and audio files in the current directory
     txt_files = [f for f in os.listdir(current_dir) if f.endswith('.txt')]
-    if not txt_files:
-        print("No .txt files found in the current directory.")
-        input("Press Enter to exit...")
-        return
+    audio_files = [f for f in os.listdir(current_dir) if f.endswith(('.mp3', '.wav', '.m4a'))]
 
-    # Display the list of .txt files
-    print("Available .txt files:")
-    for idx, file in enumerate(txt_files, start=1):
-        print(f"{idx}: {file}")
-
-    # Ask the user to select files
-    selected_files = input("Enter the numbers of the files to process (comma-separated): ")
-    try:
-        selected_indices = [int(i.strip()) - 1 for i in selected_files.split(',')]
-        selected_files = [txt_files[i] for i in selected_indices if 0 <= i < len(txt_files)]
-    except (ValueError, IndexError):
-        print("Invalid selection. Exiting.")
+    if not txt_files and not audio_files:
+        print("No .txt or audio files found in the current directory.")
         input("Press Enter to exit...")
         return
 
     # Ask the user how to handle timestamps
     print("Choose how to handle timestamps:")
     print("1: Add timestamp templates only (manual editing)")
-    print("2: Automatically generate timestamps using AI (placeholder)")
+    print("2: Automatically generate timestamps using AI for audio files")
     timestamp_option = input("Enter your choice (1 or 2): ").strip()
 
     if timestamp_option == "1":
-        # Process each selected file with templates only
-        template = f"HH:MM:SS,MS --> HH:MM:SS,MS"
-        for file in selected_files:
-            timestamp_file = datetime.now().strftime('%Y%m%d_%H%M%S')
-            output_file = f"{os.path.splitext(file)[0]}_output_{timestamp_file}.txt"
-            add_template_to_sentences(file, output_file, template)
-            print(f"Processed {file} -> {output_file}")
+        # Process .txt files with templates only
+        if not txt_files:
+            print("No .txt files found for manual processing.")
+        else:
+            print("Available .txt files:")
+            for idx, file in enumerate(txt_files, start=1):
+                print(f"{idx}: {file}")
+
+            selected_files = input("Enter the numbers of the files to process (comma-separated): ")
+            try:
+                selected_indices = [int(i.strip()) - 1 for i in selected_files.split(',')]
+                selected_files = [txt_files[i] for i in selected_indices if 0 <= i < len(txt_files)]
+            except (ValueError, IndexError):
+                print("Invalid selection. Exiting.")
+                input("Press Enter to exit...")
+                return
+
+            template = f"HH:MM:SS,MS --> HH:MM:SS,MS"
+            for file in selected_files:
+                timestamp_file = datetime.now().strftime('%Y%m%d_%H%M%S')
+                output_file = f"{os.path.splitext(file)[0]}_output_{timestamp_file}.txt"
+                add_template_to_sentences(file, output_file, template)
+                print(f"Processed {file} -> {output_file}")
+
     elif timestamp_option == "2":
-        print("AI-based timestamp generation is not yet implemented.")
-        input("Press Enter to exit...")
-        return
+        # Process audio files with AI
+        if not audio_files:
+            print("No audio files found for AI processing.")
+        else:
+            print("Available audio files:")
+            for idx, file in enumerate(audio_files, start=1):
+                print(f"{idx}: {file}")
+
+            selected_files = input("Enter the numbers of the audio files to process (comma-separated): ")
+            try:
+                selected_indices = [int(i.strip()) - 1 for i in selected_files.split(',')]
+                selected_files = [audio_files[i] for i in selected_indices if 0 <= i < len(audio_files)]
+            except (ValueError, IndexError):
+                print("Invalid selection. Exiting.")
+                input("Press Enter to exit...")
+                return
+
+            # Ask the user to select the language
+            language = input("Enter the language code for transcription (e.g., 'en' for English, 'ru' for Russian): ").strip()
+
+            for file in selected_files:
+                txt_file = generate_srt_from_audio(file, language)
+
+                # Ask if the user wants to generate a .docx file
+                generate_docx = input(f"Do you want to generate a .docx file for {file}? (yes/no): ").strip().lower()
+                if generate_docx == "yes":
+                    process_docx(txt_file, f"HH:MM:SS,MS --> HH:MM:SS,MS")
+
     else:
         print("Invalid choice. Exiting.")
         input("Press Enter to exit...")
         return
-
-    # Ask the user if they want to process .docx files
-    process_docx_option = input("Do you want to create/modify .docx files? (yes/no): ").strip().lower()
-    if process_docx_option == 'yes':
-        for file in selected_files:
-            process_docx(file, template)
 
     # Prevent the console from closing immediately
     input("Task completed. Press Enter to exit...")
