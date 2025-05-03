@@ -4,7 +4,7 @@
  False,
  'C:\\Users\\ciler\\PycharmProjects\\Time '
  'Stamper\\.venv\\Lib\\site-packages\\PyInstaller\\bootloader\\images\\icon-console.ico',
- None,
+ versioninfo.VSVersionInfo(ffi=versioninfo.FixedFileInfo(filevers=(1, 0, 0, 0), prodvers=(1, 0, 0, 0), mask=0x3f, flags=0x0, OS=0x40004, fileType=1, subtype=0x0, date=(0, 0)), kids=[versioninfo.StringFileInfo([versioninfo.StringTable('040904B0', [versioninfo.StringStruct('CompanyName', 'Klimentsi Katsko'), versioninfo.StringStruct('FileDescription', 'Command line tool for automating timestamps'), versioninfo.StringStruct('FileVersion', '1.0.0.0'), versioninfo.StringStruct('InternalName', 'TimestampTool'), versioninfo.StringStruct('LegalCopyright', '© 2025 Klimentsi Katsko'), versioninfo.StringStruct('OriginalFilename', 'TimestampTool_1.0.0.0.exe'), versioninfo.StringStruct('ProductName', 'TimestampTool'), versioninfo.StringStruct('ProductVersion', '1.0.0.0')])]), versioninfo.VarFileInfo([versioninfo.VarStruct('Translation', [1033, 1200])])]),
  False,
  False,
  b'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<assembly xmlns='
@@ -309,7 +309,7 @@
  [],
  False,
  False,
- 1746296972,
+ 1746299365,
  [('run.exe',
    'C:\\Users\\ciler\\PycharmProjects\\Time '
    'Stamper\\.venv\\Lib\\site-packages\\PyInstaller\\bootloader\\Windows-64bit-intel\\run.exe',

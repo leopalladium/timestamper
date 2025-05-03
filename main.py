@@ -57,7 +57,8 @@ def process_docx(input_file, template):
             sentences = re.split(r'(?<=[.!?])\s+', paragraph)
             for sentence in sentences:
                 if sentence.strip():  # Ignore empty sentences
-                    doc.add_paragraph(f"{template} {sentence}")
+                    doc.add_paragraph(template)  # Add the template on a separate line
+                    doc.add_paragraph(sentence)  # Add the sentence on the next line
             doc.add_paragraph("")  # Preserve paragraph breaks
         else:
             doc.add_paragraph("")  # Preserve empty lines
