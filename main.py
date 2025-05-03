@@ -105,15 +105,28 @@ def main():
         input("Press Enter to exit...")
         return
 
-    # Process each selected file
-    timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    template = f"[HH:MM:SS,MS --> HH:MM:SS,MS]"
+    # Ask the user how to handle timestamps
+    print("Choose how to handle timestamps:")
+    print("1: Add timestamp templates only (manual editing)")
+    print("2: Automatically generate timestamps using AI (placeholder)")
+    timestamp_option = input("Enter your choice (1 or 2): ").strip()
 
-    for file in selected_files:
-        timestamp_file = datetime.now().strftime('%Y%m%d_%H%M%S')
-        output_file = f"{os.path.splitext(file)[0]}_output_{timestamp_file}.txt"
-        add_template_to_sentences(file, output_file, template)
-        print(f"Processed {file} -> {output_file}")
+    if timestamp_option == "1":
+        # Process each selected file with templates only
+        template = f"HH:MM:SS,MS --> HH:MM:SS,MS"
+        for file in selected_files:
+            timestamp_file = datetime.now().strftime('%Y%m%d_%H%M%S')
+            output_file = f"{os.path.splitext(file)[0]}_output_{timestamp_file}.txt"
+            add_template_to_sentences(file, output_file, template)
+            print(f"Processed {file} -> {output_file}")
+    elif timestamp_option == "2":
+        print("AI-based timestamp generation is not yet implemented.")
+        input("Press Enter to exit...")
+        return
+    else:
+        print("Invalid choice. Exiting.")
+        input("Press Enter to exit...")
+        return
 
     # Ask the user if they want to process .docx files
     process_docx_option = input("Do you want to create/modify .docx files? (yes/no): ").strip().lower()
