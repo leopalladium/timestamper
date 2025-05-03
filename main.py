@@ -21,23 +21,37 @@ def add_template_to_sentences(input_file, output_file, template):
         file.write(updated_content)
 
 def main():
-    # Path to the input file
-    input_file = 'input.txt'  # Ensure the file exists in the same directory
-    # Generate the output file name with a timestamp
-    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-    output_file = f'output_{timestamp}.txt'
+    # Get the current directory
+    current_dir = os.getcwd()
+    print(f"Current directory: {current_dir}")
     
-    # Template to be added
-    template = '[TIMESTAMP]'
-    
-    # Check if the input file exists
-    if not os.path.exists(input_file):
-        print(f"The file {input_file} was not found.")
+    # List all .txt files in the current directory
+    txt_files = [f for f in os.listdir(current_dir) if f.endswith('.txt')]
+    if not txt_files:
+        print("No .txt files found in the current directory.")
         return
     
-    # Process the file
-    add_template_to_sentences(input_file, output_file, template)
-    print(f"The processed file has been saved as {output_file}")
+    # Display the list of .txt files
+    print("Available .txt files:")
+    for idx, file in enumerate(txt_files, start=1):
+        print(f"{idx}: {file}")
+    
+    # Ask the user to select files
+    selected_files = input("Enter the numbers of the files to process (comma-separated): ")
+    try:
+        selected_indices = [int(i.strip()) - 1 for i in selected_files.split(',')]
+        selected_files = [txt_files[i] for i in selected_indices if 0 <= i < len(txt_files)]
+    except (ValueError, IndexError):
+        print("Invalid selection. Exiting.")
+        return
+    
+    # Process each selected file
+    template = '[TIMESTAMP]'
+    for file in selected_files:
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        output_file = f"{os.path.splitext(file)[0]}_output_{timestamp}.txt"
+        add_template_to_sentences(file, output_file, template)
+        print(f"Processed {file} -> {output_file}")
 
 if __name__ == "__main__":
     main()
