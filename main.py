@@ -34,6 +34,35 @@ def add_template_to_sentences(input_file, output_file, template):
         file.write(updated_content)
 
 
+def add_timestamps_to_sentences(input_file, output_file):
+    """
+    Add timestamps in SRT format to each sentence in the input file.
+    """
+    with open(input_file, 'r', encoding='utf-8') as file:
+        content = file.read()
+
+    # Split the text into sentences
+    sentences = re.split(r'(?<=[.!?])\s+', content)
+
+    # Generate timestamps for each sentence
+    timestamped_content = ""
+    start_time = 0.0  # Start time in seconds
+    duration = 2.0  # Assume each sentence takes 2 seconds (adjust as needed)
+
+    for idx, sentence in enumerate(sentences, start=1):
+        if sentence.strip():
+            end_time = start_time + duration
+            start_timestamp = format_timestamp(start_time)
+            end_timestamp = format_timestamp(end_time)
+            timestamped_content += f"{idx}\n{start_timestamp} --> {end_timestamp}\n{sentence.strip()}\n\n"
+            start_time = end_time
+
+    with open(output_file, 'w', encoding='utf-8') as file:
+        file.write(timestamped_content)
+
+    print(f"Timestamps added to {output_file}")
+
+
 def process_docx(input_file, template):
     # Generate the name of the .docx file
     docx_file = f"{os.path.splitext(input_file)[0]}.docx"
@@ -70,20 +99,17 @@ def process_docx(input_file, template):
     print(f"Processed .docx file: {docx_file}")
 
 
-def generate_srt_from_audio(audio_file, language):
+def generate_srt_from_audio(audio_file, language, model):
     """
     Generate .txt and .srt files from an audio file using the faster-whisper library.
 
     :param audio_file: Path to the audio file.
     :param language: Language code for transcription (e.g., "en", "ru").
+    :param model: WhisperModel instance.
     """
-    # Load the Whisper model with CUDA for GPU acceleration
-    print("Loading Whisper model...")
-    model = WhisperModel("base", device="cuda")  # Use "cuda" for GPU
-
-    # Transcribe the audio file
     print(f"Transcribing {audio_file}...")
-    segments, _ = model.transcribe(audio_file, language=language)
+    segments_gen, _ = model.transcribe(audio_file, language=language)
+    segments = list(segments_gen)  # Сохраняем все сегменты в список
 
     # Generate the .txt file
     txt_file = f"{os.path.splitext(audio_file)[0]}.txt"
@@ -100,7 +126,6 @@ def generate_srt_from_audio(audio_file, language):
             start_time = format_timestamp(segment.start)
             end_time = format_timestamp(segment.end)
             text = segment.text.strip()
-
             file.write(f"{idx}\n")
             file.write(f"{start_time} --> {end_time}\n")
             file.write(f"{text}\n\n")
@@ -166,8 +191,27 @@ def main():
         print("2: Automatically generate timestamps using AI for audio files")
         timestamp_option = input("Enter your choice (1 or 2): ").strip()
 
+        # Ask the user to select the Whisper model
+        print("Select the Whisper model to use:")
+        print("1: tiny")
+        print("2: base")
+        print("3: small")
+        print("4: medium")
+        print("5: large")
+        model_choice = input("Enter your choice (1-5): ").strip()
+
+        model_map = {
+            "1": "tiny",
+            "2": "base",
+            "3": "small",
+            "4": "medium",
+            "5": "large"
+        }
+        model_name = model_map.get(model_choice, "base")  # Default to "base" if invalid choice
+        print(f"Selected model: {model_name}")
+
         if timestamp_option == "1":
-            # Process .txt files with templates only
+            # Process .txt files with templates and timestamps
             if not txt_files:
                 print("No .txt files found for manual processing.")
             else:
@@ -184,11 +228,10 @@ def main():
                     input("Press Enter to exit...")
                     return
 
-                template = f"HH:MM:SS,MS --> HH:MM:SS,MS"
                 for file in selected_files:
                     timestamp_file = datetime.now().strftime('%Y%m%d_%H%M%S')
-                    output_file = f"{os.path.splitext(file)[0]}_output_{timestamp_file}.txt"
-                    add_template_to_sentences(file, output_file, template)
+                    output_file = f"{os.path.splitext(file)[0]}_timestamped_{timestamp_file}.srt"
+                    add_timestamps_to_sentences(file, output_file)
                     print(f"Processed {file} -> {output_file}")
 
         elif timestamp_option == "2":
@@ -212,8 +255,11 @@ def main():
                 # Ask the user to select the language
                 language = input("Enter the language code for transcription (e.g., 'en' for English, 'ru' for Russian): ").strip()
 
+                print(f"Loading Whisper model: {model_name}...")
+                model = WhisperModel(model_name, device="cuda")
+
                 for file in selected_files:
-                    txt_file = generate_srt_from_audio(file, language)
+                    txt_file = generate_srt_from_audio(file, language, model)
 
                     # Ask if the user wants to generate a .docx file
                     generate_docx = input(f"Do you want to generate a .docx file for {file}? (yes/no): ").strip().lower()
@@ -237,4 +283,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
