@@ -1,26 +1,39 @@
-# timestamper
+# Timestamper
 
-This project helps you to timestamp every sentence in `.txt` files. It is useful for preparing data for AI Speech-to-Text (STT) models training from already transcribed text.
+**Timestamper** is a lightweight tool designed to add timestamps to every sentence in `.txt` files. It's especially useful for preparing transcribed text data for training AI Speech-to-Text (STT) models.
 
-## Features
-- Adds a timestamp template to each sentence in `.txt` files.
-- Preserves paragraphs and formatting from the original text.
-- Creates or modifies `.docx` files based on the source `.txt` files:
-  - If a `.docx` file with the same name exists, it will be updated.
-  - If no `.docx` file exists, a new one will be created.
+---
 
-## How to Use
-1. Place the script in the folder containing your `.txt` files.
-2. Run the script. The console will display a list of available `.txt` files.
-3. Select the files you want to process by entering their numbers (comma-separated).
-4. The script will:
-   - Generate new `.txt` files with timestamps.
-   - Optionally create or modify `.docx` files if you choose to do so.
-5. The processed files will be saved in the same directory as the script.
+## ✨ Features
+- **Timestamp Integration**: Automatically adds a timestamp template to each sentence in `.txt` files.
+- **Preserves Formatting**: Retains original paragraphs and formatting.
+- **Flexible Output Options**:
+  - Updates existing `.docx` files if they share the same name as the `.txt` file.
+  - Creates new `.docx` files if none exist.
 
-## Requirements
-- Python 3.x
-- `python-docx` package (install with `pip install python-docx`)
+---
 
-## Author
-Klimentsi Katsko (@leopalladium)
+## 🚀 How to Use
+1. **Setup**:
+   - Place the script in the same folder as your `.txt` files.
+2. **Run the Script**:
+   - Execute the script via the terminal or command line.
+3. **File Selection**:
+   - A list of available `.txt` files will appear in the console.
+   - Select the files you wish to process by entering their numbers (comma-separated).
+4. **Processing**:
+   - The script will:
+     - Generate new `.txt` files with timestamps.
+     - Optionally create or update `.docx` files based on your choice.
+5. **Output**:
+   - Processed files are saved in the same directory as the script.
+
+---
+
+## 📋 Requirements
+To use **Timestamper**, ensure the following are installed:
+
+- **Python**: Version 3.x
+- **Dependencies**: Install the required Python package with:
+  ```bash
+  pip install python-docx
