@@ -1,6 +1,8 @@
 import os
 import re
+import sys
 from datetime import datetime
+from docx import Document  # Requires `python-docx` package
 
 
 def add_template_to_sentences(input_file, output_file, template):
@@ -30,16 +32,54 @@ def add_template_to_sentences(input_file, output_file, template):
         file.write(updated_content)
 
 
+def process_docx(input_file, template):
+    # Generate the name of the .docx file
+    docx_file = f"{os.path.splitext(input_file)[0]}.docx"
+
+    # Read the content of the input .txt file
+    with open(input_file, 'r', encoding='utf-8') as file:
+        content = file.read()
+
+    # Split the text into paragraphs
+    paragraphs = content.split('\n')
+
+    # Create or modify the .docx file
+    if os.path.exists(docx_file):
+        print(f"Updating existing .docx file: {docx_file}")
+        doc = Document(docx_file)
+    else:
+        print(f"Creating new .docx file: {docx_file}")
+        doc = Document()
+
+    # Add content to the .docx file
+    for paragraph in paragraphs:
+        if paragraph.strip():  # Ignore empty paragraphs
+            sentences = re.split(r'(?<=[.!?])\s+', paragraph)
+            for sentence in sentences:
+                if sentence.strip():  # Ignore empty sentences
+                    doc.add_paragraph(f"{template} {sentence}")
+            doc.add_paragraph("")  # Preserve paragraph breaks
+        else:
+            doc.add_paragraph("")  # Preserve empty lines
+
+    # Save the .docx file
+    doc.save(docx_file)
+    print(f"Processed .docx file: {docx_file}")
+
+
 def main():
     # Display author information
     print("Author: Klimentsi Katsko (@leopalladium)")
     print("Welcome to the Time Stamper script!")
 
     # Get the directory where the script is located
-    current_dir = os.path.dirname(os.path.abspath(__file__))
+    if getattr(sys, 'frozen', False):  # Check if the script is running as a bundled executable
+        current_dir = os.path.dirname(sys.executable)
+    else:
+        current_dir = os.path.dirname(os.path.abspath(__file__))
     print(f"Current directory: {current_dir}")
 
-    # Change the working directory to the script's directory
+    # Explicitly set the working directory to the script's directory
     os.chdir(current_dir)
 
     # List all .txt files in the current directory
@@ -74,9 +114,16 @@ def main():
         add_template_to_sentences(file, output_file, template)
         print(f"Processed {file} -> {output_file}")
 
+    # Ask the user if they want to process .docx files
+    process_docx_option = input("Do you want to create/modify .docx files? (yes/no): ").strip().lower()
+    if process_docx_option == 'yes':
+        for file in selected_files:
+            process_docx(file, template)
+
     # Prevent the console from closing immediately
     input("Task completed. Press Enter to exit...")
 
 
 if __name__ == "__main__":
     main()
+
