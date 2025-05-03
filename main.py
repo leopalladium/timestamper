@@ -31,6 +31,10 @@ def add_template_to_sentences(input_file, output_file, template):
 
 
 def main():
+    # Display author information
+    print("Author: Klimentsi Katsko (@leopalladium)")
+    print("Welcome to the Time Stamper script!")
+
     # Get the directory where the script is located
     current_dir = os.path.dirname(os.path.abspath(__file__))
     print(f"Current directory: {current_dir}")
@@ -42,6 +46,7 @@ def main():
     txt_files = [f for f in os.listdir(current_dir) if f.endswith('.txt')]
     if not txt_files:
         print("No .txt files found in the current directory.")
+        input("Press Enter to exit...")
         return
 
     # Display the list of .txt files
@@ -56,6 +61,7 @@ def main():
         selected_files = [txt_files[i] for i in selected_indices if 0 <= i < len(txt_files)]
     except (ValueError, IndexError):
         print("Invalid selection. Exiting.")
+        input("Press Enter to exit...")
         return
 
     # Process each selected file
@@ -67,6 +73,9 @@ def main():
         output_file = f"{os.path.splitext(file)[0]}_output_{timestamp_file}.txt"
         add_template_to_sentences(file, output_file, template)
         print(f"Processed {file} -> {output_file}")
+
+    # Prevent the console from closing immediately
+    input("Task completed. Press Enter to exit...")
 
 
 if __name__ == "__main__":
