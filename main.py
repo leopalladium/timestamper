@@ -1,6 +1,7 @@
 import os
 import re
 import sys
+import traceback
 from datetime import datetime
 from docx import Document  # Requires `python-docx` package
 from faster_whisper import WhisperModel  # Requires `faster-whisper` package
@@ -122,94 +123,113 @@ def format_timestamp(seconds):
     return f"{hours:02}:{minutes:02}:{seconds:02},{milliseconds:03}"
 
 
+def log_error(error_message):
+    """
+    Log errors to a file named 'error_log.txt' in the current directory.
+
+    :param error_message: The error message to log.
+    """
+    log_file = "error_log.txt"
+    with open(log_file, "a", encoding="utf-8") as file:
+        file.write(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - {error_message}\n")
+    print(f"An error occurred. Details have been logged to {log_file}.")
+
+
 def main():
-    # Display author information
-    print("Author: Klimentsi Katsko (@leopalladium)")
-    print("Welcome to the Time Stamper script!")
+    try:
+        # Display author information
+        print("Author: Klimentsi Katsko (@leopalladium)")
+        print("Welcome to the Time Stamper script!")
 
-    # Get the directory where the script is located
-    if getattr(sys, 'frozen', False):  # Check if the script is running as a bundled executable
-        current_dir = os.path.dirname(sys.executable)
-    else:
-        current_dir = os.path.dirname(os.path.abspath(__file__))
-    print(f"Current directory: {current_dir}")
-
-    # Explicitly set the working directory to the script's directory
-    os.chdir(current_dir)
-
-    # List all .txt and audio files in the current directory
-    txt_files = [f for f in os.listdir(current_dir) if f.endswith('.txt')]
-    audio_files = [f for f in os.listdir(current_dir) if f.endswith(('.mp3', '.wav', '.m4a'))]
-
-    if not txt_files and not audio_files:
-        print("No .txt or audio files found in the current directory.")
-        input("Press Enter to exit...")
-        return
-
-    # Ask the user how to handle timestamps
-    print("Choose how to handle timestamps:")
-    print("1: Add timestamp templates only (manual editing)")
-    print("2: Automatically generate timestamps using AI for audio files")
-    timestamp_option = input("Enter your choice (1 or 2): ").strip()
-
-    if timestamp_option == "1":
-        # Process .txt files with templates only
-        if not txt_files:
-            print("No .txt files found for manual processing.")
+        # Get the directory where the script is located
+        if getattr(sys, 'frozen', False):  # Check if the script is running as a bundled executable
+            current_dir = os.path.dirname(sys.executable)
         else:
-            print("Available .txt files:")
-            for idx, file in enumerate(txt_files, start=1):
-                print(f"{idx}: {file}")
+            current_dir = os.path.dirname(os.path.abspath(__file__))
+        print(f"Current directory: {current_dir}")
 
-            selected_files = input("Enter the numbers of the files to process (comma-separated): ")
-            try:
-                selected_indices = [int(i.strip()) - 1 for i in selected_files.split(',')]
-                selected_files = [txt_files[i] for i in selected_indices if 0 <= i < len(txt_files)]
-            except (ValueError, IndexError):
-                print("Invalid selection. Exiting.")
-                input("Press Enter to exit...")
-                return
+        # Explicitly set the working directory to the script's directory
+        os.chdir(current_dir)
 
-            template = f"HH:MM:SS,MS --> HH:MM:SS,MS"
-            for file in selected_files:
-                timestamp_file = datetime.now().strftime('%Y%m%d_%H%M%S')
-                output_file = f"{os.path.splitext(file)[0]}_output_{timestamp_file}.txt"
-                add_template_to_sentences(file, output_file, template)
-                print(f"Processed {file} -> {output_file}")
+        # List all .txt and audio files in the current directory
+        txt_files = [f for f in os.listdir(current_dir) if f.endswith('.txt')]
+        audio_files = [f for f in os.listdir(current_dir) if f.endswith(('.mp3', '.wav', '.m4a'))]
 
-    elif timestamp_option == "2":
-        # Process audio files with AI
-        if not audio_files:
-            print("No audio files found for AI processing.")
+        if not txt_files and not audio_files:
+            print("No .txt or audio files found in the current directory.")
+            input("Press Enter to exit...")
+            return
+
+        # Ask the user how to handle timestamps
+        print("Choose how to handle timestamps:")
+        print("1: Add timestamp templates only (manual editing)")
+        print("2: Automatically generate timestamps using AI for audio files")
+        timestamp_option = input("Enter your choice (1 or 2): ").strip()
+
+        if timestamp_option == "1":
+            # Process .txt files with templates only
+            if not txt_files:
+                print("No .txt files found for manual processing.")
+            else:
+                print("Available .txt files:")
+                for idx, file in enumerate(txt_files, start=1):
+                    print(f"{idx}: {file}")
+
+                selected_files = input("Enter the numbers of the files to process (comma-separated): ")
+                try:
+                    selected_indices = [int(i.strip()) - 1 for i in selected_files.split(',')]
+                    selected_files = [txt_files[i] for i in selected_indices if 0 <= i < len(txt_files)]
+                except (ValueError, IndexError):
+                    print("Invalid selection. Exiting.")
+                    input("Press Enter to exit...")
+                    return
+
+                template = f"HH:MM:SS,MS --> HH:MM:SS,MS"
+                for file in selected_files:
+                    timestamp_file = datetime.now().strftime('%Y%m%d_%H%M%S')
+                    output_file = f"{os.path.splitext(file)[0]}_output_{timestamp_file}.txt"
+                    add_template_to_sentences(file, output_file, template)
+                    print(f"Processed {file} -> {output_file}")
+
+        elif timestamp_option == "2":
+            # Process audio files with AI
+            if not audio_files:
+                print("No audio files found for AI processing.")
+            else:
+                print("Available audio files:")
+                for idx, file in enumerate(audio_files, start=1):
+                    print(f"{idx}: {file}")
+
+                selected_files = input("Enter the numbers of the audio files to process (comma-separated): ")
+                try:
+                    selected_indices = [int(i.strip()) - 1 for i in selected_files.split(',')]
+                    selected_files = [audio_files[i] for i in selected_indices if 0 <= i < len(audio_files)]
+                except (ValueError, IndexError):
+                    print("Invalid selection. Exiting.")
+                    input("Press Enter to exit...")
+                    return
+
+                # Ask the user to select the language
+                language = input("Enter the language code for transcription (e.g., 'en' for English, 'ru' for Russian): ").strip()
+
+                for file in selected_files:
+                    txt_file = generate_srt_from_audio(file, language)
+
+                    # Ask if the user wants to generate a .docx file
+                    generate_docx = input(f"Do you want to generate a .docx file for {file}? (yes/no): ").strip().lower()
+                    if generate_docx == "yes":
+                        process_docx(txt_file, f"HH:MM:SS,MS --> HH:MM:SS,MS")
+
         else:
-            print("Available audio files:")
-            for idx, file in enumerate(audio_files, start=1):
-                print(f"{idx}: {file}")
+            print("Invalid choice. Exiting.")
+            input("Press Enter to exit...")
+            return
 
-            selected_files = input("Enter the numbers of the audio files to process (comma-separated): ")
-            try:
-                selected_indices = [int(i.strip()) - 1 for i in selected_files.split(',')]
-                selected_files = [audio_files[i] for i in selected_indices if 0 <= i < len(audio_files)]
-            except (ValueError, IndexError):
-                print("Invalid selection. Exiting.")
-                input("Press Enter to exit...")
-                return
-
-            # Ask the user to select the language
-            language = input("Enter the language code for transcription (e.g., 'en' for English, 'ru' for Russian): ").strip()
-
-            for file in selected_files:
-                txt_file = generate_srt_from_audio(file, language)
-
-                # Ask if the user wants to generate a .docx file
-                generate_docx = input(f"Do you want to generate a .docx file for {file}? (yes/no): ").strip().lower()
-                if generate_docx == "yes":
-                    process_docx(txt_file, f"HH:MM:SS,MS --> HH:MM:SS,MS")
-
-    else:
-        print("Invalid choice. Exiting.")
+    except Exception as e:
+        error_message = traceback.format_exc()
+        log_error(error_message)
+        print("An unexpected error occurred. Please check the error log for details.")
         input("Press Enter to exit...")
-        return
 
     # Prevent the console from closing immediately
     input("Task completed. Press Enter to exit...")
