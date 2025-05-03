@@ -8,28 +8,27 @@ from faster_whisper import WhisperModel  # Requires `faster-whisper` package
 
 
 def add_template_to_sentences(input_file, output_file, template):
-    # Read the content of the input file
+    """
+    Добавляет шаблон перед каждым предложением в тексте.
+    """
     with open(input_file, 'r', encoding='utf-8') as file:
         content = file.read()
 
-    # Split the text into paragraphs
+    # Разделение текста на абзацы
     paragraphs = content.split('\n')
 
-    # Process each paragraph
     updated_content = ''
     for paragraph in paragraphs:
-        if paragraph.strip():  # Ignore empty paragraphs
-            # Split the paragraph into sentences
-            sentences = re.split(r'(?<=[.!?])\s+', paragraph)
+        if paragraph.strip():  # Игнорируем пустые абзацы
+            # Разделение абзаца на предложения
+            sentences = re.split(r'(?<=[.!?])(?<!\b\w\.\w)(?<!\b\w\.)\s+', paragraph)
             for sentence in sentences:
-                if sentence.strip():  # Ignore empty sentences
-                    # Add the template before each sentence
+                if sentence.strip():  # Игнорируем пустые предложения
                     updated_content += f"{template}\n{sentence}\n"
-            updated_content += '\n'  # Preserve paragraph breaks
+            updated_content += '\n'  # Сохраняем разрывы между абзацами
         else:
-            updated_content += '\n'  # Preserve empty lines
+            updated_content += '\n'
 
-    # Write the updated text to the output file
     with open(output_file, 'w', encoding='utf-8') as file:
         file.write(updated_content)
 
@@ -136,10 +135,7 @@ def generate_srt_from_audio(audio_file, language, model):
 
 def format_timestamp(seconds):
     """
-    Format a timestamp in seconds to SRT format (HH:MM:SS,MS).
-
-    :param seconds: Timestamp in seconds.
-    :return: Formatted timestamp as a string.
+    Форматирует секунды в строку SRT (HH:MM:SS,MS).
     """
     total_milliseconds = int(round(seconds * 1000))
     hours, remainder = divmod(total_milliseconds, 3600 * 1000)
@@ -283,3 +279,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
