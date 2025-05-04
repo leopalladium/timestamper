@@ -41,12 +41,19 @@ I've created this script to simplify my $10 contract from Upwork (some enterpris
     1. Place .txt with the text in the same directory as the script
     2. Choose your file
     3. Get the .txt divided on the sentences with .srt-like timestamp templates before each sentence
-    
-     
+
+## Roadmap
+- [] Add speaker diarization
+- [] Optimize and debug code
+- [] Develop this app as the subtitle editing tool
+- [] Make API for launching it on the server
+- [] Add audio track from video text recognition
+- [] Make .exe of AI powered version more lightweight (as for the 2.0.0-beta it weighs almost 4GB and barely launches)
+- [] Signature for executable 
 
 ## License
 
-This project is licensed under the MIT License. See the LICENSE file for details.
+This project is licensed under the MIT License. See the [[LICENSE]] file for details.
 
 
 ## Authors
