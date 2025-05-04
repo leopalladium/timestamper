@@ -187,7 +187,7 @@ def main():
             for file in selected_files:
                 txt_file = generate_srt_from_audio_word_level(file, language, model)
 
-                # Гарантированно выведет строку и подождёт ввода
+                print(f"Generated SRT file: {txt_file}")  
                 print(f"Generate .docx file for {file}? (yes/no): ", end='', flush=True)
                 answer = input().strip().lower()
 
