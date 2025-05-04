@@ -29,27 +29,42 @@ def add_timestamps_to_sentences(input_file, output_file):
 
     print(f"Timestamps added to {output_file}")
 
-def process_docx(input_file, template):
-    docx_file = f"{os.path.splitext(input_file)[0]}.docx"
-    with open(input_file, 'r', encoding='utf-8') as file:
-        content = file.read()
+def convert_srt_to_docx(srt_file_path):
+    """
+    Converts an .srt subtitle file into a .docx file with format:
+    (timestamp \n sentence)
+    """
+    if not os.path.exists(srt_file_path):
+        print(f"SRT file not found: {srt_file_path}")
+        return
 
-    paragraphs = content.split('\n')
-    doc = Document(docx_file) if os.path.exists(docx_file) else Document()
+    # Create a new Word document
+    doc = Document()
 
-    for paragraph in paragraphs:
-        if paragraph.strip():
-            sentences = re.split(r'(?<=[.!?])(?<!\b\w\.\w)(?<!\b\w\.)\s+', paragraph)
-            for sentence in sentences:
-                if sentence.strip():
-                    doc.add_paragraph(template)
-                    doc.add_paragraph(sentence)
-            doc.add_paragraph("")
-        else:
-            doc.add_paragraph("")
+    with open(srt_file_path, 'r', encoding='utf-8') as f:
+        content = f.read()
 
-    doc.save(docx_file)
-    print(f"Processed .docx file: {docx_file}")
+    # Split the content into subtitle blocks
+    blocks = re.split(r'\n\s*\n', content.strip())
+
+    for block in blocks:
+        lines = block.strip().split('\n')
+        if len(lines) >= 2:
+            # The second line usually contains the timestamp
+            time_line = lines[1] if '-->' in lines[1] else None
+            # All lines after the timestamp line are subtitle text
+            text_lines = lines[2:] if time_line else lines[1:]
+            text = " ".join(text_lines).strip()
+
+            if time_line and text:
+                doc.add_paragraph(time_line)
+                doc.add_paragraph(text)
+                doc.add_paragraph("")  # Add an empty line between entries
+
+    # Save the Word document next to the original .srt file
+    output_path = os.path.splitext(srt_file_path)[0] + ".docx"
+    doc.save(output_path)
+    print(f"Document saved: {output_path}")
 
 def generate_srt_from_audio_word_level(audio_path, language="ru", model=None):
     if model is None:
@@ -171,8 +186,13 @@ def main():
 
             for file in selected_files:
                 txt_file = generate_srt_from_audio_word_level(file, language, model)
-                if input(f"Generate .docx file for {file}? (yes/no): ").strip().lower() == "yes":
-                    process_docx(txt_file, "HH:MM:SS,MS --> HH:MM:SS,MS")
+
+                # Гарантированно выведет строку и подождёт ввода
+                print(f"Generate .docx file for {file}? (yes/no): ", end='', flush=True)
+                answer = input().strip().lower()
+
+                if answer == "yes":
+                    convert_srt_to_docx(txt_file)
 
         else:
             print("Invalid choice or no files found.")
