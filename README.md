@@ -1,39 +1,55 @@
+
 # Timestamper
 
-**Timestamper** is a lightweight tool designed to add timestamps to every sentence in `.txt` files. It's especially useful for preparing transcribed text data for training AI Speech-to-Text (STT) models.
+**Timestamper** provides tools for working with audio transcription and subtitle files. It allows you to generate timestamps for text files, transcribe audio files into subtitles, and convert .srt subtitle files into .docx documents.
 
----
 
-## ✨ Features
-- **Timestamp Integration**: Automatically adds a timestamp template to each sentence in `.txt` files.
-- **Preserves Formatting**: Retains original paragraphs and formatting.
-- **Flexible Output Options**:
-  - Updates existing `.docx` files if they share the same name as the `.txt` file.
-  - Creates new `.docx` files if none exist.
+## Features
 
----
+- **Add Timestamps to Text Files:** Automatically generate timestamp templates for .txt files.
+- **Audio Transcription:** Transcribe audio files (.mp3, .wav, .m4a, .aac, .webm) into .srt subtitle files using the faster-whisper library.
+- **Word-Level Timestamps:** Generate subtitles with precise word-level timestamps.
+- **SRT to DOCX Conversion:** Convert .srt subtitle files into .docx documents with timestamps and text.
+- **Custom Whisper Model Selection:** Choose from various Whisper model sizes (tiny, base, small, medium, large) for transcription.
+- **Multi-Language Support:** Specify the language for audio transcription.
 
-## 🚀 How to Use
-1. **Setup**:
-   - Place the script in the same folder as your `.txt` files.
-2. **Run the Script**:
-   - Execute the script via the terminal or command line.
-3. **File Selection**:
-   - A list of available `.txt` files will appear in the console.
-   - Select the files you wish to process by entering their numbers (comma-separated).
-4. **Processing**:
-   - The script will:
-     - Generate new `.txt` files with timestamps.
-     - Optionally create or update `.docx` files based on your choice.
-5. **Output**:
-   - Processed files are saved in the same directory as the script.
 
----
+## Installation
 
-## 📋 Requirements
-To use **Timestamper**, ensure the following are installed:
+1. Clone the repository:
+```
+git clone https://github.com/leopalladium/time-stamper.git
+cd time-stamper
+```
+2. Install dependencies:
+```
+pip install -r requirements.txt
+```
+## Usage/Examples
 
-- **Python**: Version 3.x
-- **Dependencies**: Install the required Python package with:
-  ```bash
-  pip install python-docx
+I've created this script to simplify my $10 contract from Upwork (some enterprise clients say that this is easy task, but you must proofread and timestamp hours of shitty recorded audio), so this is simple STT application which can recognize and timestamp audio to simplify such monkey job to just proofreading as it was declared.
+
+### Transcribing an Audio File
+    1. Place your audio file in the same directory as the script.
+    2. Run the script and select the transcription option.
+    3. Choose the audio file and Whisper model
+    4. The script generates an .srt file with word-level timestamps
+    5. Choose if you want to generate .docx or not
+    6. Find generated files in the directory
+
+### Placing timestamp templates before each sentence (v1.0.0.0)
+    1. Place .txt with the text in the same directory as the script
+    2. Choose your file
+    3. Get the .txt divided on the sentences with .srt-like timestamp templates before each sentence
+    
+     
+
+## License
+
+This project is licensed under the MIT License. See the LICENSE file for details.
+
+
+## Authors
+
+- [Klimentsi Katsko (@leopalladium)](https://www.github.com/leopalladium)
+
