@@ -160,7 +160,7 @@ def main():
         if not root_dir:
             print("No directory selected. Exiting.")
             return
-
+        # TODO: Make the option to convert srt to docx
         # Recursively find audio files
         audio_files = []
         for dirpath, _, files in os.walk(root_dir):
@@ -171,7 +171,8 @@ def main():
         if not audio_files:
             print("No audio files found in the selected directory.")
             return
-
+        # TODO: Ask user if they want to process all files or select specific ones
+        # TODO: Ask user if they want to generate docx
         print("Select the Whisper model to use:")
         print("1: tiny\n2: base\n3: small\n4: medium\n5: large")
         model_choice = input("Enter your choice (1-5): ").strip()
@@ -183,9 +184,12 @@ def main():
         for idx, file in enumerate(audio_files, start=1):
             print(f"{idx}: {file}")
 
-        selected_files = input("Enter the numbers of the audio files to process (comma-separated): ")
-        selected_indices = [int(i.strip()) - 1 for i in selected_files.split(',')]
-        selected_files = [audio_files[i] for i in selected_indices if 0 <= i < len(audio_files)]
+        selected_files_input = input("Enter the numbers of the audio files to process (comma-separated), or type 'all' to process all: ").strip()
+        if selected_files_input.lower() == "all":
+            selected_files = audio_files
+        else:
+            selected_indices = [int(i.strip()) - 1 for i in selected_files_input.split(',')]
+            selected_files = [audio_files[i] for i in selected_indices if 0 <= i < len(audio_files)]
 
         for file in selected_files:
             # Output SRT in the same folder as audio
@@ -196,10 +200,10 @@ def main():
                 os.rename(txt_file, srt_path)
             print(f"Generated SRT file: {srt_path}")
 
-            print(f"Generate .docx file for {file}? (yes/no): ", end='', flush=True)
-            answer = input().strip().lower()
-            if answer == "yes":
-                convert_srt_to_docx(srt_path)
+            # print(f"Generate .docx file for {file}? (yes/no): ", end='', flush=True)
+            # answer = input().strip().lower()
+            # if answer == "yes":
+            #     convert_srt_to_docx(srt_path)
 
     except Exception:
         error_message = traceback.format_exc()
