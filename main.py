@@ -5,6 +5,8 @@ import traceback
 from datetime import datetime
 from docx import Document
 from faster_whisper import WhisperModel
+import tkinter as tk
+from tkinter import filedialog
 
 def add_timestamps_to_sentences(input_file, output_file):
     with open(input_file, 'r', encoding='utf-8') as file:
@@ -69,7 +71,14 @@ def convert_srt_to_docx(srt_file_path):
 def generate_srt_from_audio_word_level(audio_path, language="ru", model=None):
     if model is None:
         raise ValueError("WhisperModel instance must be provided")
-    segments, _ = model.transcribe(audio_path, language=language, word_timestamps=True)
+    segments, _ = model.transcribe(
+        audio_path,
+        language=language,
+        word_timestamps=True,
+        beam_size=5,
+        # batch_size=8,
+        vad_filter=True,
+        vad_parameters=dict(min_silence_duration_ms=500))
 
     words = []
     for segment in segments:
@@ -143,59 +152,54 @@ def main():
         print("Author: Klimentsi Katsko (@leopalladium)")
         print("Welcome to the Time Stamper script!")
 
-        current_dir = os.path.dirname(sys.executable) if getattr(sys, 'frozen', False) else os.path.dirname(os.path.abspath(__file__))
-        os.chdir(current_dir)
+        # Ask user to select root directory
+        root = tk.Tk()
+        root.withdraw()
+        print("Please select the root directory containing audio files...")
+        root_dir = filedialog.askdirectory()
+        if not root_dir:
+            print("No directory selected. Exiting.")
+            return
 
-        txt_files = [f for f in os.listdir(current_dir) if f.endswith('.txt')]
-        audio_files = [f for f in os.listdir(current_dir) if f.endswith(('.mp3', '.wav', '.m4a'))]
+        # Recursively find audio files
+        audio_files = []
+        for dirpath, _, files in os.walk(root_dir):
+            for f in files:
+                if f.lower().endswith(('.mp3', '.wav', '.m4a')):
+                    audio_files.append(os.path.join(dirpath, f))
 
-        print("Choose how to handle timestamps:")
-        print("1: Add timestamp templates only (manual editing)")
-        print("2: Automatically generate timestamps using AI for audio files")
-        timestamp_option = input("Enter your choice (1 or 2): ").strip()
+        if not audio_files:
+            print("No audio files found in the selected directory.")
+            return
 
         print("Select the Whisper model to use:")
         print("1: tiny\n2: base\n3: small\n4: medium\n5: large")
         model_choice = input("Enter your choice (1-5): ").strip()
         model_name = {"1": "tiny", "2": "base", "3": "small", "4": "medium", "5": "large"}.get(model_choice, "base")
 
-        if timestamp_option == "1" and txt_files:
-            print("Available .txt files:")
-            for idx, file in enumerate(txt_files, start=1):
-                print(f"{idx}: {file}")
+        language = input("Enter the language code for transcription (e.g., 'en', 'ru'): ").strip()
+        model = WhisperModel(model_name, device="cuda", compute_type="int8_float16") # Adjust compute_type as needed
 
-            selected_files = input("Enter the numbers of the files to process (comma-separated): ")
-            selected_indices = [int(i.strip()) - 1 for i in selected_files.split(',')]
-            selected_files = [txt_files[i] for i in selected_indices if 0 <= i < len(txt_files)]
+        for idx, file in enumerate(audio_files, start=1):
+            print(f"{idx}: {file}")
 
-            for file in selected_files:
-                output_file = f"{os.path.splitext(file)[0]}_timestamped_{datetime.now().strftime('%Y%m%d_%H%M%S')}.srt"
-                add_timestamps_to_sentences(file, output_file)
+        selected_files = input("Enter the numbers of the audio files to process (comma-separated): ")
+        selected_indices = [int(i.strip()) - 1 for i in selected_files.split(',')]
+        selected_files = [audio_files[i] for i in selected_indices if 0 <= i < len(audio_files)]
 
-        elif timestamp_option == "2" and audio_files:
-            print("Available audio files:")
-            for idx, file in enumerate(audio_files, start=1):
-                print(f"{idx}: {file}")
+        for file in selected_files:
+            # Output SRT in the same folder as audio
+            srt_path = os.path.splitext(file)[0] + "_wordlevel.srt"
+            txt_file = generate_srt_from_audio_word_level(file, language, model)
+            # Move SRT to correct folder if needed
+            if os.path.abspath(txt_file) != os.path.abspath(srt_path):
+                os.rename(txt_file, srt_path)
+            print(f"Generated SRT file: {srt_path}")
 
-            selected_files = input("Enter the numbers of the audio files to process (comma-separated): ")
-            selected_indices = [int(i.strip()) - 1 for i in selected_files.split(',')]
-            selected_files = [audio_files[i] for i in selected_indices if 0 <= i < len(audio_files)]
-
-            language = input("Enter the language code for transcription (e.g., 'en', 'ru'): ").strip()
-            model = WhisperModel(model_name, device="cuda")
-
-            for file in selected_files:
-                txt_file = generate_srt_from_audio_word_level(file, language, model)
-
-                print(f"Generated SRT file: {txt_file}")
-                print(f"Generate .docx file for {file}? (yes/no): ", end='', flush=True)
-                answer = input().strip().lower()
-
-                if answer == "yes":
-                    convert_srt_to_docx(txt_file)
-
-        else:
-            print("Invalid choice or no files found.")
+            print(f"Generate .docx file for {file}? (yes/no): ", end='', flush=True)
+            answer = input().strip().lower()
+            if answer == "yes":
+                convert_srt_to_docx(srt_path)
 
     except Exception:
         error_message = traceback.format_exc()
